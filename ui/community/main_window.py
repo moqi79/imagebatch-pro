@@ -43,10 +43,35 @@ class CommunityApp:
         m = tk.Menu(menubar, tearoff=0)
         m.add_command(label="退出", command=self.root.quit)
         menubar.add_cascade(label="文件", menu=m)
+
+        lic_menu = tk.Menu(menubar, tearoff=0)
+        lic_menu.add_command(label="升级专业版...", command=self._show_activate)
+        lic_menu.add_command(label="查看授权状态", command=self._show_license_info)
+        lic_menu.add_separator()
+        lic_menu.add_command(label="撤销激活", command=self._deactivate)
+        menubar.add_cascade(label="授权", menu=lic_menu)
+
         h = tk.Menu(menubar, tearoff=0)
         h.add_command(label="关于", command=lambda: AboutDialog(self.root, config.__version__))
         menubar.add_cascade(label="帮助", menu=h)
         self.root.configure(menu=menubar)
+
+    def _show_activate(self):
+        from .activate_dialog import ActivateDialog
+        ActivateDialog(self.root)
+
+    def _show_license_info(self):
+        from core.license import get_license_manager
+        lm = get_license_manager()
+        from .dialogs import show_info
+        show_info(self.root, "授权状态", lm.summary())
+
+    def _deactivate(self):
+        from core.license import get_license_manager
+        from .dialogs import confirm, show_info
+        if confirm(self.root, "确认", "确定撤销当前授权？将回到社区版。"):
+            get_license_manager().deactivate()
+            show_info(self.root, "已撤销", "已回到社区版。")
 
     def _build_ui(self):
         pad = {"padx": 10, "pady": 6}
@@ -153,6 +178,8 @@ class CommunityApp:
         ttk.Button(ctrl_frame, text="⏹ 取消", command=self._cancel).grid(row=0, column=2)
         ttk.Button(ctrl_frame, text="清空日志", command=self._clear_log).grid(
             row=0, column=3, padx=(6, 0))
+        ttk.Button(ctrl_frame, text="升级专业版", command=self._show_activate).grid(
+            row=0, column=4, padx=(12, 0))
 
         # ---- 进度与日志 ----
         self.var_progress = tk.DoubleVar(value=0)
