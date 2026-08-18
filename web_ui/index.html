@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImageBatch Pro — 图片批量处理助手</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+    <!-- 顶栏 -->
+    <header class="topbar">
+        <div class="brand">
+            <span class="logo">🖼️</span>
+            <span class="title">ImageBatch Pro</span>
+            <span class="ver" id="version">v1.0.0</span>
+        </div>
+        <div class="topbar-right">
+            <span id="licenseBadge" class="badge badge-free">社区版</span>
+            <button id="btnUpgrade" class="btn btn-upgrade">✨ 升级专业版</button>
+            <button id="btnAbout" class="btn-icon" title="关于">ⓘ</button>
+        </div>
+    </header>
+
+    <!-- 主区域 -->
+    <main class="main">
+        <!-- 左侧：设置面板 -->
+        <section class="panel panel-left">
+            <!-- 目录选择 -->
+            <div class="card">
+                <h3 class="card-title">📁 选择图片目录</h3>
+                <div class="dir-input">
+                    <input type="text" id="inputDir" placeholder="输入或粘贴图片目录路径..." class="input">
+                    <button onclick="scanDir()" class="btn btn-primary">扫描</button>
+                </div>
+                <div id="fileList" class="file-list"></div>
+                <div class="dir-input" style="margin-top:8px">
+                    <input type="text" id="outputDir" placeholder="输出目录（留空则在输入目录/output下）" class="input">
+                </div>
+            </div>
+
+            <!-- 预设模板 -->
+            <div class="card">
+                <h3 class="card-title">📋 预设模板</h3>
+                <select id="presetSelect" class="select" onchange="loadPresets()">
+                    <option value="">— 选择预设 —</option>
+                </select>
+                <div id="presetDesc" class="preset-desc"></div>
+            </div>
+
+            <!-- 压缩 -->
+            <div class="card">
+                <h3 class="card-title">🗜️ 批量压缩</h3>
+                <label class="switch-row">
+                    <input type="checkbox" id="enableCompress" checked>
+                    <span>启用压缩</span>
+                </label>
+                <div class="slider-row">
+                    <label>目标体积: <span id="compressVal">500</span> KB</label>
+                    <input type="range" id="compressTarget" min="50" max="5000" value="500" step="50"
+                           oninput="document.getElementById('compressVal').textContent=this.value">
+                </div>
+            </div>
+
+            <!-- 改尺寸 -->
+            <div class="card">
+                <h3 class="card-title">📐 改尺寸</h3>
+                <label class="switch-row">
+                    <input type="checkbox" id="enableResize">
+                    <span>启用改尺寸</span>
+                </label>
+                <div class="resize-row">
+                    <input type="number" id="resizeW" placeholder="宽" value="1080" class="input-small">
+                    <span class="x-text">×</span>
+                    <input type="number" id="resizeH" placeholder="高" value="1080" class="input-small">
+                </div>
+                <select id="resizeMode" class="select">
+                    <option value="cover">cover（智能裁剪填充）</option>
+                    <option value="contain">contain（等比缩放留白）</option>
+                    <option value="stretch">stretch（强制拉伸）</option>
+                    <option value="pad">pad（边缘填充）</option>
+                </select>
+            </div>
+
+            <!-- 格式转换 -->
+            <div class="card">
+                <h3 class="card-title">🔄 格式转换</h3>
+                <label class="switch-row">
+                    <input type="checkbox" id="enableFormat">
+                    <span>转换格式</span>
+                </label>
+                <select id="formatSelect" class="select">
+                    <option value="jpg">JPG（有损压缩）</option>
+                    <option value="png">PNG（无损透明）</option>
+                    <option value="webp">WebP（最佳压缩）</option>
+                    <option value="bmp">BMP</option>
+                    <option value="tiff">TIFF</option>
+                </select>
+            </div>
+
+            <!-- 水印 -->
+            <div class="card card-locked" id="watermarkCard">
+                <h3 class="card-title">
+                    💧 文字水印
+                    <span class="lock-tag" id="wmLock">🔒 专业版</span>
+                </h3>
+                <label class="switch-row">
+                    <input type="checkbox" id="enableWatermark">
+                    <span>启用水印</span>
+                </label>
+                <input type="text" id="wmText" placeholder="水印文字..." class="input">
+                <div class="wm-row">
+                    <select id="wmPosition" class="select select-sm">
+                        <option value="bottom-right">右下角</option>
+                        <option value="bottom-left">左下角</option>
+                        <option value="top-right">右上角</option>
+                        <option value="top-left">左上角</option>
+                        <option value="center">居中</option>
+                        <option value="bottom-center">底部居中</option>
+                        <option value="top-center">顶部居中</option>
+                        <option value="left-center">左侧居中</option>
+                        <option value="right-center">右侧居中</option>
+                        <option value="tile">平铺</option>
+                    </select>
+                    <input type="color" id="wmColor" value="#FFFFFF" class="color-input">
+                </div>
+                <div class="slider-row">
+                    <label>字体大小: <span id="wmSizeVal">36</span></label>
+                    <input type="range" id="wmSize" min="12" max="120" value="36"
+                           oninput="document.getElementById('wmSizeVal').textContent=this.value">
+                </div>
+                <div class="slider-row">
+                    <label>透明度: <span id="wmOpacityVal">70</span>%</label>
+                    <input type="range" id="wmOpacity" min="10" max="100" value="70"
+                           oninput="document.getElementById('wmOpacityVal').textContent=this.value">
+                </div>
+            </div>
+
+            <!-- EXIF -->
+            <div class="card card-locked" id="exifCard">
+                <h3 class="card-title">
+                    🔧 EXIF 信息
+                    <span class="lock-tag" id="exifLock">🔒 专业版</span>
+                </h3>
+                <label class="switch-row">
+                    <input type="checkbox" id="enableClearExif">
+                    <span>清除 EXIF 信息（去除 GPS/设备信息）</span>
+                </label>
+            </div>
+        </section>
+
+        <!-- 右侧：处理区 -->
+        <section class="panel panel-right">
+            <div class="card card-action">
+                <button id="btnStart" onclick="startProcessing()" class="btn btn-start">
+                    ▶ 开始处理
+                </button>
+                <div id="progressArea" class="progress-area" style="display:none">
+                    <div class="progress-bar-wrap">
+                        <div id="progressBar" class="progress-bar"></div>
+                    </div>
+                    <span id="progressText" class="progress-text">处理中...</span>
+                </div>
+            </div>
+
+            <!-- 结果区 -->
+            <div id="resultArea" class="card" style="display:none">
+                <h3 class="card-title">📊 处理结果</h3>
+                <div id="resultSummary" class="result-summary"></div>
+                <div id="resultList" class="result-list"></div>
+            </div>
+
+            <!-- 授权状态 -->
+            <div class="card card-license">
+                <h3 class="card-title">🔑 授权状态</h3>
+                <div id="licenseInfo" class="license-info"></div>
+                <div id="licenseFeatures" class="feature-tags"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 底部 -->
+    <footer class="footer">
+        <span>ImageBatch Pro — 纯本地运行，隐私零泄露</span>
+        <span id="footerStatus">就绪</span>
+    </footer>
+
+    <!-- 升级弹窗 -->
+    <div id="upgradeModal" class="modal-overlay" style="display:none">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>✨ 升级到专业版</h2>
+                <button onclick="closeModal('upgradeModal')" class="btn-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="pricing-cards">
+                    <div class="pricing-card" onclick="selectEdition('pro')">
+                        <h3>专业版</h3>
+                        <div class="price">¥69</div>
+                        <ul>
+                            <li>✓ 图片水印（Logo 叠加）</li>
+                            <li>✓ EXIF 信息编辑</li>
+                            <li>✓ 预设模板</li>
+                            <li>✓ 处理报告导出</li>
+                            <li>✓ 暗色主题</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card pricing-card-best" onclick="selectEdition('studio')">
+                        <div class="best-tag">推荐</div>
+                        <h3>工作室版</h3>
+                        <div class="price">¥299</div>
+                        <ul>
+                            <li>✓ 专业版全部功能</li>
+                            <li>✓ 插件系统</li>
+                            <li>✓ 批量重命名</li>
+                            <li>✓ API 接口</li>
+                            <li>✓ 云同步配置</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="orderSection" class="order-section" style="display:none">
+                    <h3>支付订单</h3>
+                    <pre id="orderText" class="order-text"></pre>
+                    <div class="confirm-input">
+                        <input type="text" id="confirmCode" placeholder="支付确认码 PAY-XXXXXXXX-X-XXXXXXXX"
+                               class="input">
+                        <button onclick="confirmPayment()" class="btn btn-primary">确认支付并激活</button>
+                    </div>
+                    <p class="hint">付款后输入支付确认码即可自动激活，全程本地完成。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 关于弹窗 -->
+    <div id="aboutModal" class="modal-overlay" style="display:none">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h2>关于 ImageBatch Pro</h2>
+                <button onclick="closeModal('aboutModal')" class="btn-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="text-align:center; font-size:28px; margin:16px 0">🖼️</p>
+                <p style="text-align:center; font-size:18px; font-weight:bold">ImageBatch Pro v1.0.0</p>
+                <p style="text-align:center; color:#666; margin:8px 0">一键批量压缩、改尺寸、加水印、转格式</p>
+                <p style="text-align:center; color:#888; margin:8px 0">纯本地运行，隐私零泄露</p>
+                <p style="text-align:center; margin:16px 0">
+                    <a href="https://github.com/moqi79/imagebatch-pro" target="_blank">GitHub 仓库</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
