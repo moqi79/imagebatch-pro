@@ -12,6 +12,14 @@ import json
 import os
 import sys
 
+# 修复 Windows 控制台 GBK 编码问题
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, OSError):
+        pass
+
 import config
 from core.utils import setup_logging
 from core.processor import ProcessingConfig
@@ -279,6 +287,12 @@ def build_parser():
     lic.add_argument("--deactivate", action="store_true", help="撤销授权，回到社区版")
     lic.add_argument("--gen-key", nargs=2, metavar=("MACHINE_ID", "EDITION"),
                      help="生成授权码（开发者用，如 --gen-key abcd1234 pro）")
+
+    pay = p.add_argument_group("支付与激活")
+    pay.add_argument("--pay", choices=["pro", "studio"], help="生成支付订单")
+    pay.add_argument("--confirm-payment", metavar="CODE",
+                     help="输入支付确认码激活")
+    pay.add_argument("--list-orders", action="store_true", help="查看本地订单")
     return p
 
 
@@ -336,6 +350,51 @@ def main(argv=None):
         key = LicenseManager.generate_key(machine_id.lower(), edition)
         print(f"授权码: {key}")
         print(f"版本: {edition} | 机器码: {machine_id}")
+        return
+
+    # ---- 支付与激活 ----
+    from core.payment import (
+        generate_order, confirm_payment, PRICING,
+        format_order_text, get_pending_orders, get_order,
+        generate_offline_confirm_code,
+    )
+
+    if args.pay:
+        edition = args.pay
+        order = generate_order(edition)
+        print("=" * 50)
+        print("  支付订单已生成")
+        print("=" * 50)
+        print(format_order_text(order))
+        print("-" * 50)
+        print(f"  支付确认码: {order['confirm_code']}")
+        print("=" * 50)
+        print(f"\n请支付 {order['price_text']} 后，输入确认码激活：")
+        print(f'  ImageBatch-Pro.exe --confirm-payment "{order["confirm_code"]}"')
+        return
+
+    if args.confirm_payment:
+        code = args.confirm_payment
+        success, message, key = confirm_payment(code)
+        if success:
+            print(f"[成功] {message}")
+            print(f"授权码: {key}")
+            lm = get_license_manager()
+            print(lm.summary())
+        else:
+            print(f"[失败] {message}")
+            sys.exit(1)
+        return
+
+    if args.list_orders:
+        orders = get_pending_orders()
+        if not orders:
+            print("暂无待支付订单")
+            return
+        print(f"待支付订单（{len(orders)} 个）:")
+        for o in orders:
+            print(f"  {o['order_id']} | {o['edition_name']} | {o['price_text']} | {o['timestamp'][:19]}")
+            print(f"    确认码: {o.get('confirm_code', 'N/A')}")
         return
 
     if args.cli:
