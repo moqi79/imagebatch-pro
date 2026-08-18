@@ -1,0 +1,25 @@
+{
+    "name": "抖音竖屏 9:16",
+    "id": "douyin_9x16",
+    "description": "抖音短视频封面，9:16 竖屏比例，1080×1920",
+    "params": {
+        "resize": {
+            "width": 1080,
+            "height": 1920,
+            "mode": "cover",
+            "gravity": "center"
+        },
+        "compress": {
+            "target_size_kb": 800,
+            "min_quality": 75
+        },
+        "watermark": {
+            "text": "@抖音号",
+            "position": "bottom-center",
+            "font_size": 36,
+            "color": "#FFFFFF",
+            "opacity": 0.7
+        },
+        "format": "jpg"
+    }
+}
