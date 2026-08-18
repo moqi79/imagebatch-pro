@@ -1,0 +1,18 @@
+{
+    "name": "小红书 3:4",
+    "id": "xiaohongshu_3x4",
+    "description": "小红书笔记配图，3:4 竖屏比例，单张 ≤ 500KB",
+    "params": {
+        "resize": {
+            "width": 1080,
+            "height": 1440,
+            "mode": "cover",
+            "gravity": "center"
+        },
+        "compress": {
+            "target_size_kb": 500,
+            "min_quality": 75
+        },
+        "format": "jpg"
+    }
+}
