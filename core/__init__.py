@@ -6,6 +6,7 @@ from .converter import convert_image
 from .processor import ProcessingConfig, process_image
 from .batch import BatchProcessor
 from .license import LicenseManager, get_license_manager
+from .payment import generate_order, confirm_payment, PRICING
 
 __all__ = [
     "compress_to_size",
@@ -18,4 +19,7 @@ __all__ = [
     "BatchProcessor",
     "LicenseManager",
     "get_license_manager",
+    "generate_order",
+    "confirm_payment",
+    "PRICING",
 ]
