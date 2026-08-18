@@ -1,0 +1,18 @@
+{
+    "name": "Instagram 1:1",
+    "id": "instagram_1x1",
+    "description": "Instagram 正方形配图，1080×1080",
+    "params": {
+        "resize": {
+            "width": 1080,
+            "height": 1080,
+            "mode": "cover",
+            "gravity": "center"
+        },
+        "compress": {
+            "target_size_kb": 500,
+            "min_quality": 80
+        },
+        "format": "jpg"
+    }
+}
