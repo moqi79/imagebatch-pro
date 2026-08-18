@@ -1,7 +1,7 @@
 """授权码生成工具（开发者使用）。
 
 用法：
-    # 单个生成
+    # 生成授权码
     python tools/gen_license.py <机器码> <版本>
 
     # 示例
@@ -9,6 +9,9 @@
 
     # 批量生成（从 CSV 文件读取机器码）
     python tools/gen_license.py --batch machine_codes.csv
+
+    # 生成支付确认码（用户付款后发给用户）
+    python tools/gen_license.py --pay <订单号> <机器码> <版本>
 
 CSV 格式：
     machine_id,edition
@@ -25,6 +28,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from core.license import LicenseManager
+from core.payment import generate_offline_confirm_code, PRICING
 
 
 def generate_one(machine_id, edition):
@@ -61,6 +65,22 @@ def main():
                         writer.writerow([mid, ed, key])
                         count += 1
         print(f"已生成 {count} 个授权码 -> {out_path}")
+        return
+
+    if args[0] == "--pay" and len(args) >= 4:
+        order_id = args[1]
+        machine_id = args[2].lower()
+        edition = args[3].strip().lower()
+        if edition not in PRICING:
+            print("错误：版本必须是 pro 或 studio")
+            sys.exit(1)
+        price = PRICING[edition]["price"]
+        code = generate_offline_confirm_code(order_id, machine_id, edition, price)
+        print(f"支付确认码: {code}")
+        print(f"订单号: {order_id}")
+        print(f"版本: {edition} | 价格: {PRICING[edition]['price_text']}")
+        print(f"\n发送给用户后，用户执行:")
+        print(f'  ImageBatch-Pro.exe --confirm-payment "{code}"')
         return
 
     if len(args) >= 2:
