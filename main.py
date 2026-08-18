@@ -210,23 +210,31 @@ def _fmt(num):
 
 
 def launch_gui(edition):
-    """启动图形界面。"""
+    """启动图形界面——优先 Web UI（无 tkinter 依赖）。"""
+    # Web UI 模式（默认，无额外依赖）
+    try:
+        from web_server import run_server
+        run_server(open_browser=True)
+        return
+    except Exception as e:
+        print(f"Web UI 启动失败: {e}")
+
+    # 回退到 tkinter（如有）
     if edition == config.PRO:
         try:
             from ui.pro.main_window import ProMainWindow
             ProMainWindow().run()
             return
         except ImportError:
-            print("PyQt5 未安装，回退到社区版 tkinter 界面")
-            edition = config.COMMUNITY
+            pass
 
     try:
         from ui.community.main_window import CommunityApp
-    except ImportError as e:
-        print(f"无法启动 GUI：{e}")
+        CommunityApp().run()
+    except ImportError:
+        print("无法启动 GUI")
         print("可使用命令行模式：python main.py --cli --input ./in --output ./out")
         sys.exit(1)
-    CommunityApp().run()
 
 
 def build_parser():
